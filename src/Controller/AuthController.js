@@ -100,14 +100,14 @@ const signin = async (req, res) => {
       process.env.JWT_SECRET
     );
 
-    const { firstName, lastName, userName: un, profilePicture, role } = foundUser;
+    const { firstName, lastName, userName: un, profilePicture, role ,cart} = foundUser;
 
     res.cookie("loginToken", token, {
       maxAge: 24 * 60 * 60 * 1000,
       httpOnly: true
     }).status(200).json({
       msg: "Login successful",
-      data: { firstName, lastName, userName: un, profilePicture, role }
+      data: { firstName, lastName, userName: un, profilePicture, role,cart }
     });
 
   } catch (error) {

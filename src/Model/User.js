@@ -31,7 +31,7 @@ const UserSchema=new mongoose.Schema({
     },
     role:{
         type:String,
-        enum:["Buyer","Seller"],
+        enum:["buyer","seller"],
         immutable:true
     },
     profilePicture:{
