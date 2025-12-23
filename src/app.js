@@ -7,6 +7,13 @@ const { productRoutes } = require("./Routes/ProductRouter");
 const { AuthRouter } = require("./Routes/AuthRouter");
 const { buyerRouter } = require("./Routes/buyerRouter");
 const app = express();
+const cors = require("cors");
+
+
+app.use(cors({
+    credentials:true,
+    origin:["http://localhost:5173"]
+}))
 app.use(cp());
 app.use(express.json());
 mongoose.connect(process.env.MONGODB_URL)

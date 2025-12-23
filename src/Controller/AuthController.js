@@ -12,7 +12,7 @@ const signup = async (req, res) => {
   try {
     const { firstName, lastName, userName, password, mobileNumber, profilePicture , role } = req.body;
 
-    if (!firstName || !lastName || !userName || !password || !mobileNumber) {
+    if (!firstName || !lastName || !userName || !password || !mobileNumber || !role) {
       throw new Error("All fields are required");
     }
 
