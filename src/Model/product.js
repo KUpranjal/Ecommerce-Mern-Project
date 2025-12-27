@@ -33,7 +33,6 @@ const validator = require("validator");
 
   image: {
     type: String,
-    required: true,
     validate: {
       validator: v => validator.isURL(v),
       message: "Invalid image URL"

@@ -1,55 +1,68 @@
-const mongoose=require("mongoose")
-const validate =require("validator")
-const UserSchema=new mongoose.Schema({
-    firstName:{
-        type:String,
-        minLength:3,
-        maxLength:10,
-        required:true,
-        trim:true
-    },
-    lastName:{
-        type:String,
-        minLength:3,
-        maxLength:15,
-        required:true,
+const mongoose = require("mongoose")
+const validator = require("validator")
 
-    },
-    userName:{
-        type:String,
-        maxLength:15,
-        minLength:5,
-        required:true,
-        unique:true,
-        immutable:true
-    },
-    password:{
-        type:String,
-        required:true,
-        min:8,
-        max:15
-    },
-    role:{
-        type:String,
-        enum:["buyer","seller"],
-        immutable:true
-    },
-    profilePicture:{
-        type:String,
 
+const UserSchema = new mongoose.Schema({
+    firstName : {
+        type : String,
+        minlength : 2,
+        maxlength : 8,
+        required : true 
     },
-    mobileNumber:{
-        type:String,
-
+    lastName : {
+        type : String,
+        minlength : 3,
+        maxlength : 10,
+        required : true
     },
-    cart:[]
+    userName :{
+        type : String,
+        minlength : 3,
+        maxlength : 10,
+        required : true,
+        unique : true
+    },
+    role : {
+        type : String,
+        enum : {
+            values : ["buyer" , "seller"],
+            message : 'enum validator failed for `{PATH}` with `{VALUE}`' 
+        },
+        required : true,
+    },
+    mobile : {
+       type : String, 
+       validate : (val) =>{
+        const isMobile = validator.isMobilePhone(val , "en-IN")
+        if(!isMobile)
+        {
+            throw new Error("Mobile Number is not valid ")
+        }
+       },
+       required : true
+    },
+    profilePicture : {
+        type : String ,
+        // validate : (val) =>{
+        //    const  isImg = validator.isURL(val)
+        //     if(!isImg)
+        //     {
+        //         throw new Error("Please Enter valid Image URL")
+        //     }
+        // },
+        // required : true
+    },
+    password : {
+       type : String,
+       required : true
+    },
+    cart : []
 })
-const User=mongoose.model("User",UserSchema)
-module.exports={
+
+
+
+const User = mongoose.model("user", UserSchema)
+
+module.exports = {
     User
 }
-
-
-
-
-

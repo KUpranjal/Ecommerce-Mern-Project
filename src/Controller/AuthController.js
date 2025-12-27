@@ -1,134 +1,129 @@
-const bcrypt = require("bcrypt");
-const validator = require("validator");
-const jwt = require("jsonwebtoken");
-const { User } = require("../Model/User");
+const validator = require("validator")
+const bcrypt = require("bcrypt")
+const jwt = require("jsonwebtoken")
+const {User} = require("../Model/User")
+
+
+const userSignup = async(req, res) =>{
+    try {
+          const {firstName, lastName, userName , profilePicture, mobile, role , password} = req.body
+
+         if(!firstName || firstName.length < 2 || firstName.length > 8)
+         {
+            throw new Error("firstName should be greaterthan 2 and less than 8")
+         }
+         if(!lastName || lastName.length < 3 || lastName.length > 10)
+         {
+            throw new Error("lastName should be greaterthan 3 and less than 10")
+         }
+         if(! userName || userName.length < 3 || userName.length > 10 )
+         {
+            throw new Error("userName should be greaterthan 3 and less than 10")
+         }
+         if(!mobile  || !validator.isMobilePhone(mobile , "en-IN"))
+         {
+            throw new Error("Please Provide a valid number")
+         }
+        //  if(!profilePicture || ! validator.isURL(profilePicture))
+        //  {
+        //     throw new Error("Please Provide a Imge URL")
+        //  }
+         if(!role || !["seller", "buyer"].includes(role))
+         {
+            throw new Error("You can create either Buyer or seller Account")
+         }
+         if(!password)
+         {
+            throw new Error("Please Provide your password")
+         }
+
+         const isStrongPassword = validator.isStrongPassword(password)
+
+         if(!isStrongPassword)
+         {
+            throw new Error("Please Enter Vlaid Password")
+         }
+
+        const isPresentUserName = await User.findOne({userName : userName.toLowerCase()})
+
+        if(isPresentUserName)
+        {
+            throw new Error("User already exist")
+        }
 
 
 
-
-
-
-const signup = async (req, res) => {
-  try {
-    const { firstName, lastName, userName, password, mobileNumber, profilePicture , role } = req.body;
-
-    if (!firstName || !lastName || !userName || !password || !mobileNumber || !role) {
-      throw new Error("All fields are required");
+         const hashPassword = await bcrypt.hash(password, 10)
+         const createdUser = await User.create({firstName, lastName, userName: userName.toLowerCase() , profilePicture, mobile, role , password: hashPassword})
+       
+         res.status(201).json({Success : true , data : createdUser})
+    } catch (error) {
+        res.status(400).json({error : error.message})
     }
+}
 
-    if (firstName.length < 3 || firstName.length > 10) {
-      throw new Error("First name must be 3–10 characters");
-    }
-
-    if (lastName.length < 3 || lastName.length > 15) {
-      throw new Error("Last name must be 3–15 characters");
-    }
-
-    if (userName.length < 5 || userName.length > 15) {
-      throw new Error("Username must be 5–15 characters");
-    }
-
-    if (password.length < 8 || password.length > 15) {
-      throw new Error("Password must be 8–15 characters");
-    }
-
-    if (!validator.isMobilePhone(mobileNumber, "en-IN")) {
-      throw new Error("Enter a valid 10-digit mobile number");
-    }
-
-    const foundUser = await User.findOne({ userName });
-    if (foundUser) {
-      throw new Error("Username already exists");
-    }
-  let userRole = ["buyer", "seller"].includes(role) ? role : "buyer";
-
-    const isPasswordStrong = validator.isStrongPassword(password, {
-      minLength: 8,
-      minLowercase: 1,
-      minUppercase: 1,
-      minNumbers: 1,
-      minSymbols: 1
-    });
-
-    if (!isPasswordStrong) {
-      throw new Error("Password is not strong enough");
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    await User.create({
-      firstName,
-      lastName,
-      userName,
-      password: hashedPassword,
-      mobileNumber,
-      profilePicture,
-      role: userRole
-    });
-
-    res.status(201).json({ msg: "User registered successfully" });
-
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-
-
-
-
-const signin = async (req, res) => {
+const userSignin = async (req, res) => {
   try {
     const { userName, password } = req.body;
 
-    if (!userName || !password) {
-      throw new Error("Username and password are required");
+    if (!userName) {
+      return res.status(400).json({ error: "Please enter a valid username" });
     }
 
-    const foundUser = await User.findOne({ userName });
+    if (!password) {
+      return res.status(400).json({ error: "Please enter your password" });
+    }
+
+    const foundUser = await User.findOne({
+      userName: userName.toLowerCase()
+    });
+
     if (!foundUser) {
-      throw new Error("User does not exist");
+      return res.status(404).json({ error: "User does not exist" });
     }
 
     const isMatch = await bcrypt.compare(password, foundUser.password);
     if (!isMatch) {
-      throw new Error("Incorrect password");
+      return res.status(401).json({ error: "Invalid password" });
     }
 
     const token = jwt.sign(
       { id: foundUser._id },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
     );
 
-    const { firstName, lastName, userName: un, profilePicture, role ,cart} = foundUser;
+    const { firstName, lastName, userName: un, profilePicture, mobile, role } =
+      foundUser;
 
-    res.cookie("loginToken", token, {
-      maxAge: 24 * 60 * 60 * 1000,
-      httpOnly: true
-    }).status(200).json({
-      msg: "Login successful",
-      data: { firstName, lastName, userName: un, profilePicture, role,cart }
-    });
+    res
+      .cookie("loginToken", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000,
+      })
+      .status(200)
+      .json({
+        success: true,
+        message: "You are logged in now",
+        userData: { firstName, lastName, userName: un, profilePicture, mobile, role },
+      });
 
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
 
+const userSignout = async(req,res) =>{
+    res.cookie("loginToken" , null).status(200).json({Success : true , msg : "You are logout Now"})
+}
 
-
-
-
-const signout = async (req, res) => {
-  res
-    .cookie("loginToken", null, { maxAge: 0 })
-    .status(200)
-    .json({ success: true, msg: "You are logout Now" });
-};
 
 module.exports = {
-  signup,
-  signin,
-  signout
-};
+    userSignup,
+    userSignin,
+    userSignout
+ 
+}
