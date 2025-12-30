@@ -71,18 +71,19 @@ const buyProduct = async (req, res) => {
   try {
     const cart = req.user.cart;
     let totalPrice = 0;
-    let totalQuantity=0
+    let totalQuantity = 0;
+
     for (let item of cart) {
-      totalPrice += item.product.price * item.quentity;
-      totalQuantity+=item.quentity
+      totalPrice += item.product.price * item.quantity;
+      totalQuantity += item.quantity;
     }
 
-    const checkoutInfo = {
+    const checkoutInfo = await Checkout.create({
       user: req.user._id,
       totalPrice,
       totalQuantity,
       product: cart
-    };
+    });
 
     res.status(200).json({
       msg: "Payment Successful",
@@ -93,6 +94,7 @@ const buyProduct = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
 
 module.exports = {
     addProduct,
