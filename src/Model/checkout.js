@@ -1,20 +1,41 @@
-const mongoose=require("mongoose")
+const mongoose = require("mongoose");
 
-const checkoutSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: "User"
+const checkoutSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    totalPrice: {
+      type: Number,
+      required: true,
+    },
+    totalQuantity: {
+      type: Number,
+      required: true,
+    },
+    products: [
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+        priceAtPurchase: {
+          type: Number,
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+        },
+      },
+    ],
   },
-  totalPrice: {
-    type: Number,
-    required: true
-  },
-  product: []
-});
+  { timestamps: true }
+);
 
 const Checkout = mongoose.model("Checkout", checkoutSchema);
 
-module.exports = {
-  Checkout
-};
+module.exports = { Checkout };
